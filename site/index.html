@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Sign Up RFID</title>
+		<style>
+			p {
+				font-family: 'Courier New', Courier, monospace;
+			}
+			h2{
+				font-family: 'Courier New', Courier, monospace;
+			}
+			button{
+				font-family: 'Courier New', Courier, monospace;
+				font-size: 15px;
+			}
+			label{
+				font-family: 'Courier New', Courier, monospace;
+				font-size: 16px;
+				font-weight: bold;
+			}
+			textarea{
+				font-family: 'Courier New', Courier, monospace;
+				font-size: 18px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="rfid-form">
+			<h2>Sign Up Form</h2>
+			<form action="/" method="POST">
+				<label for="fname">First Name:</label>
+				<input id="fname" type="text" name="fname"><br>
+				<label for="lname">Last Name:</label>
+				<input id="lname" type="text" name="lname"><br>
+				<label for="rfid">RFID:</label>
+				<input id="rfid" type="text" name="rfid"><br><br>
+				<button type="submit">Sign up User</button>
+			</form>
+		</div>
+		<div class="get-all-form">
+			<form action="/all_users" method="POST">
+				<button type="submit">List All Users</button>
+			</form>
+		</div>
+		<br><br>
+		<label for="arduino-serial">Arduino Streaming Data:</label><br>
+		<p>Press Start Data to get data from Arduino.</p>
+		<p>To make it stop, press Stop Data.</p>
+		<textarea id="arduino-serial" cols="30" rows="10"></textarea><br>
+		<button onclick="stopData()">Stop Data</button>
+		<button onclick="startData()">Start Data</button>
+		<button onclick="clearData()">Clear Data</button>
+		<script src="/socket.io/socket.io.js"></script>
+  		<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+		<script>
+			var socket = io.connect('http://localhost:3000');
+			var txtarea = document.getElementById('arduino-serial');
+			function stopData()
+			{
+				socket.off('data');
+			};
+			function startData()
+			{
+				socket.on('data', function(elem) {
+					console.log("data received: " + elem);
+					if (elem.label === 'rfid') {
+						console.log("TXT: " + txtarea.value);
+						txtarea.value = txtarea.value + "RFID: " + elem.rfid + "\n";
+						txtarea.scrollTop = txtarea.scrollHeight;
+					}
+				});
+			};
+			function clearData()
+			{
+				txtarea.value = "";
+			};
+		</script>
+	</body>
+</html>
