@@ -17,6 +17,12 @@ Requirements:
 		npm install sqlite3 --save
 	6) Serialport module
 		npm install serialport --save
+	7) Events module
+		npm install events --save
+	8) http module
+		npm install http --save
+	9) Socket.io module
+		npm install socketio --save
 
 Installation:
 
@@ -58,6 +64,8 @@ exit 0
 3) Create a folder named site in home directory
 
 4) Move package.json, index.js, index.html, rfid_create.sql, rfid.db (if it exists)
+
+5) Check db_file and arduino_port variable in the index.js script.
 
 5) Reboot Raspberry Pi
 

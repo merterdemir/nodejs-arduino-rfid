@@ -13,13 +13,13 @@ const body_parser = require('body-parser');
 
 const port         = 3000;
 const db_file      = '/home/pi/site/rfid.db';
-const db_test_path = '/Users/Mert/Desktop/Files/Others/RFID/site/rfid.db';
-const arduino_port = "/dev/tty.usbmodem14101";
+const db_test_path = '/Users/Mert/Desktop/Files/Others/RFID/nodejs-arduino-rfid/site/rfid.db';
+const arduino_port = "/dev/tty.usbmodem14201";
 
 var sp = new SerialPort(arduino_port, {
 	baudRate: 9600
-	//parser: serialport.parsers.readline("\n")
 });
+
 const parser = new Readline();
 sp.pipe(parser);
 
@@ -65,6 +65,57 @@ function redirect_callback(fname, lname, rfid, success_flag, err, res) {
 		res.redirect('/fail?err=' + err);
 	}
 }
+
+function checkUser(rfid)
+{
+	var sql = 'SELECT u.FNAME as fname, ';
+	sql    += 'u.LNAME as lname, ';
+	sql    += 'u.RFID as rfid ';
+	sql    += 'FROM USERS u ';
+	sql    += 'WHERE u.RFID = ?;';
+	console.log("Checking user with rfid: " + rfid.trim());
+	var flag = false;
+	db.all(sql, [rfid.trim()], (error, rows) => {
+		if (error) {
+			console.log("Error while checking database. Err:-1");
+			sp.write('0', function(err) {
+				if (err) {
+				  return console.log('Error on write: ', err.message)
+				}
+				console.log('Door Close message written.');
+			});
+		} else {
+			if (rows)
+			{
+				rows.forEach(function (row) {
+					if (row.rfid == rfid)
+					{
+						flag = true;
+						console.log(`Found user ${row.fname} ${row.lname}, door will be opened.`);
+						sp.write('1', function(err) {
+							if (err) {
+								return console.log('Error on write: ', err.message)
+							}
+							console.log('Door Open message written.');
+						});
+						events.emit('data', {'label': 'open', 'fname': row.fname, 'lname': row.lname});
+					}
+				});
+				if (!flag)
+				{
+					console.log("Not found user, door won't be opened. Err:0");
+					sp.write('0', function(err) {
+						if (err) {
+						return console.log('Error on write: ', err.message)
+						}
+						console.log('Door Close message written.');
+					});
+					events.emit('data', {'label': 'close', 'rfid': rfid});
+				}
+			}
+		}
+	});
+};
 
 function registerUser(fname, lname, rfid, callback, res) {
 	var sql = 'INSERT INTO USERS (FNAME, LNAME, RFID)';
@@ -197,7 +248,6 @@ io.on('connection', function(socket) {
 	events.on('data', function(data) {
         console.log("Sending: " + data);
         socket.emit('data', data);
-        //parser.write('ROBOT POWER ON\n');
     });
 	socket.on('disconnect', function() {
 		console.log('user disconnected');
@@ -215,7 +265,10 @@ adio.on('connection', function(socket) {
 	});
 });
 
-parser.on('data', line => events.emit('data', {'label': 'rfid', 'rfid': line}));
+parser.on('data', function(line) {
+	checkUser(line.trim()); 
+	events.emit('data', {'label': 'rfid', 'rfid': line.trim()})
+});
 
 http.listen(port, function() {
 	console.log('listening on *:3000');

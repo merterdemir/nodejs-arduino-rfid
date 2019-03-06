@@ -65,7 +65,19 @@
 					console.log("data received: " + elem);
 					if (elem.label === 'rfid') {
 						console.log("TXT: " + txtarea.value);
-						txtarea.value = txtarea.value + "RFID: " + elem.rfid + "\n";
+						txtarea.value = txtarea.value + "-> RFID: " + elem.rfid + "\n";
+						txtarea.scrollTop = txtarea.scrollHeight;
+					}
+					else if (elem.label == 'open')
+					{
+						console.log("TXT: " + txtarea.value);
+						txtarea.value = txtarea.value + "Door will be open for " + elem.fname + " " + elem.lname + ".\n";
+						txtarea.scrollTop = txtarea.scrollHeight;
+					}
+					else if (elem.label == 'close')
+					{
+						console.log("TXT: " + txtarea.value);
+						txtarea.value = txtarea.value + "No record found for " + elem.rfid + ". Door won't be opened.\n";
 						txtarea.scrollTop = txtarea.scrollHeight;
 					}
 				});
